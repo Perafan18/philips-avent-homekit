@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS LaunchAgent that keeps the Philips Avent -> RTSP bridge running.
+  Install (no sudo needed):
+    1) Replace __INSTALL_DIR__ below with the absolute path to this repo
+       (e.g. /Users/you/philips-avent-homekit).
+    2) cp this file to ~/Library/LaunchAgents/com.example.aventproxy.plist
+    3) launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.example.aventproxy.plist
+  Serves rtsp://127.0.0.1:38554/<CameraName>. A LaunchAgent runs while the user
+  is logged in; for a headless server that stays logged in this is enough.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.example.aventproxy</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__INSTALL_DIR__/scripts/run-bridge.sh</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__INSTALL_DIR__</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>15</integer>
+    <key>StandardOutPath</key>
+    <string>__INSTALL_DIR__/bridge.log</string>
+    <key>StandardErrorPath</key>
+    <string>__INSTALL_DIR__/bridge.err.log</string>
+</dict>
+</plist>

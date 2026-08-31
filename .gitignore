@@ -1,0 +1,23 @@
+# --- Secrets & per-user session data — NEVER commit these ---
+philips_avent_bridge.json      # contains a live Tuya session (sid/ecode/uid)
+device_id.txt                  # your phone device id
+.login_state.json
+.tuya-data/                    # Go bridge session cache
+*.session
+*.secret
+.env
+
+# --- Vendored upstream (cloned at setup, not part of this repo) ---
+vendor/
+
+# --- Build artifacts ---
+bin/
+ffmpeg-fdk/
+.venv/
+*.log
+__pycache__/
+*.pyc
+
+# --- OS / editor ---
+.DS_Store
+*.swp

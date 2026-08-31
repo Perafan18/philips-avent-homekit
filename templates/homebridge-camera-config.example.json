@@ -1,0 +1,31 @@
+{
+  "//": "Add this block to the 'platforms' array of your Homebridge config.json.",
+  "//install": "1) Install the plugin: homebridge-camera-ffmpeg. 2) Replace <CameraName> with the RTSP path avent-login.py printed. 3) Set videoProcessor to the ffmpeg built by build-ffmpeg-fdk.sh (needed for audio). 4) Restart Homebridge, then add the camera manually in the Home app (see README).",
+
+  "name": "Camera FFmpeg",
+  "platform": "Camera-ffmpeg",
+
+  "//videoProcessor": "Absolute path to the libfdk_aac-enabled ffmpeg (from build-ffmpeg-fdk.sh). Only needed for audio; omit to use the system ffmpeg for video-only.",
+  "videoProcessor": "__INSTALL_DIR__/ffmpeg-fdk/bin/ffmpeg",
+
+  "cameras": [
+    {
+      "name": "Baby Camera",
+      "manufacturer": "Philips Avent",
+      "//unbridge": "REQUIRED. HomeKit cannot bridge cameras; this publishes it as a separate accessory you add manually in the Home app.",
+      "unbridge": true,
+      "videoConfig": {
+        "source": "-rtsp_transport tcp -fflags +nobuffer -flags low_delay -avioflags direct -probesize 500000 -i rtsp://127.0.0.1:38554/<CameraName>",
+        "audio": true,
+        "//vcodec": "Re-encode (do NOT use 'copy'): it conceals the source's occasional corrupt slices and emits regular keyframes, which stops the freezing. -realtime/-bf 0 keep A/V latency low.",
+        "vcodec": "h264_videotoolbox",
+        "encoderOptions": "-realtime 1 -bf 0 -g 24 -keyint_min 24",
+        "maxWidth": 1920,
+        "maxHeight": 1080,
+        "maxFPS": 24,
+        "maxBitrate": 2500,
+        "packetSize": 1316
+      }
+    }
+  ]
+}

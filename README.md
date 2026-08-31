@@ -53,7 +53,7 @@ done by Homebridge; the bridge just serves unicast RTSP.
 ## Setup
 
 ```bash
-git clone https://github.com/<you>/philips-avent-homekit.git
+git clone https://github.com/Perafan18/philips-avent-homekit.git
 cd philips-avent-homekit
 
 # 1) Fetch upstream aventproxy, build the Go bridge, make the venv
@@ -114,6 +114,21 @@ systemd unit (`systemctl enable --now aventproxy`). Replace `__INSTALL_DIR__`
 Confirmed with **SCD641**. The upstream integration is model-agnostic (generic
 Tuya API) and reports SCD643, SCD951, SCD953, SCD971, SCD921, SCD973/SCD923 as
 working. If discovery finds nothing, make sure the camera is online in the app.
+
+## Disclaimer — read before using
+
+This is a **personal project, shared as-is, with no warranty and no support.**
+Please don't open issues expecting maintenance.
+
+- **Not affiliated with, endorsed by, or supported by Philips or Tuya.** All
+  trademarks belong to their owners.
+- It works by talking to the Tuya cloud the same way the official Baby Monitor+
+  app does. That can **break at any time** (session expiry, app-key changes,
+  API changes) and **may conflict with the vendor's Terms of Service.**
+- Use it **only on your own devices and your own account**, at your own risk.
+- The reverse-engineering it depends on lives in
+  [thekoma/aventproxy](https://github.com/thekoma/aventproxy); this repo only
+  adds a standalone + Homebridge wrapper around it.
 
 ## License
 

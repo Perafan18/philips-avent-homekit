@@ -72,8 +72,10 @@ cd philips-avent-homekit
 ./scripts/build-ffmpeg-fdk.sh
 ```
 
-Run the bridge permanently with the LaunchAgent template in `templates/`
-(replace `__INSTALL_DIR__`, then `launchctl bootstrap gui/$(id -u) …`).
+Run the bridge permanently with a template from `templates/`: the macOS
+LaunchAgent (`launchctl bootstrap gui/$(id -u) …`, no sudo) or the Linux
+systemd unit (`systemctl enable --now aventproxy`). Replace `__INSTALL_DIR__`
+(and `__USER__`) first.
 
 ## Homebridge
 

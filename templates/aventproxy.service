@@ -1,0 +1,22 @@
+# systemd unit that keeps the Philips Avent -> RTSP bridge running on Linux.
+# Install:
+#   1) Replace __INSTALL_DIR__ and __USER__ below.
+#   2) sudo cp aventproxy.service /etc/systemd/system/
+#   3) sudo systemctl enable --now aventproxy
+# Serves rtsp://127.0.0.1:38554/<CameraName>.
+
+[Unit]
+Description=Philips Avent WebRTC -> RTSP bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__INSTALL_DIR__
+ExecStart=__INSTALL_DIR__/scripts/run-bridge.sh
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

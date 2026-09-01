@@ -1,0 +1,29 @@
+diff --git a/avent-webrtc-bridge/pkg/rtsp/server.go b/avent-webrtc-bridge/pkg/rtsp/server.go
+index 7dda00e..414ae4b 100644
+--- a/avent-webrtc-bridge/pkg/rtsp/server.go
++++ b/avent-webrtc-bridge/pkg/rtsp/server.go
+@@ -7,6 +7,7 @@ import (
+ 	"errors"
+ 	"fmt"
+ 	"net"
++	"os"
+ 	"sync"
+ 	"syscall"
+ 	"time"
+@@ -130,8 +131,15 @@ func (s *RTSPServer) Start() error {
+ 		return errors.New("server is already running")
+ 	}
+ 
++	// Bind to loopback by default so the plaintext RTSP stream is not exposed
++	// to the whole LAN. Set AVENT_RTSP_BIND (e.g. "0.0.0.0" or a specific IP)
++	// to serve it to another host on purpose.
++	bindHost := os.Getenv("AVENT_RTSP_BIND")
++	if bindHost == "" {
++		bindHost = "127.0.0.1"
++	}
+ 	lc := net.ListenConfig{Control: reuseAddrControl}
+-	listener, err := lc.Listen(s.ctx, "tcp", fmt.Sprintf(":%d", s.port))
++	listener, err := lc.Listen(s.ctx, "tcp", fmt.Sprintf("%s:%d", bindHost, s.port))
+ 	if err != nil {
+ 		return fmt.Errorf("failed to listen on port %d: %v", s.port, err)
+ 	}

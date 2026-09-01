@@ -1,8 +1,17 @@
 # --- Secrets & per-user session data — NEVER commit these ---
-philips_avent_bridge.json      # contains a live Tuya session (sid/ecode/uid)
-device_id.txt                  # your phone device id
+# (comments MUST be on their own line; git .gitignore has no inline comments)
+
+# contains a live Tuya session (sid/ecode/uid)
+philips_avent_bridge.json
+# your phone device id
+device_id.txt
 .login_state.json
-.tuya-data/                    # Go bridge session cache
+# non-secret, but per-user (email/country)
+watchdog.env
+# Go bridge session cache
+.tuya-data/
+# session-watchdog notification markers
+.wd-*
 *.session
 *.secret
 .env
@@ -12,6 +21,7 @@ vendor/
 
 # --- Build artifacts ---
 bin/
+ffmpeg-static/
 ffmpeg-fdk/
 .venv/
 *.log

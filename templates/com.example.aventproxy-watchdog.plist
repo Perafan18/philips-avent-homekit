@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Runs scripts/session-watchdog.py every 6h: keeps the Tuya SID alive and posts
+  a one-time macOS notification if the session expired or the camera dropped
+  offline. Install (no sudo):
+    1) Replace __INSTALL_DIR__ with the absolute path to this repo.
+    2) Store the account password once:
+         security add-generic-password -s aventproxy-tuya -a you@example.com -w
+    3) cp templates/watchdog.env.example watchdog.env   # set EMAIL + COUNTRY
+    4) cp this file to ~/Library/LaunchAgents/com.example.aventproxy-watchdog.plist
+    5) launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.example.aventproxy-watchdog.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.example.aventproxy-watchdog</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__INSTALL_DIR__/.venv/bin/python</string>
+        <string>__INSTALL_DIR__/scripts/session-watchdog.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__INSTALL_DIR__</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StartInterval</key>
+    <integer>21600</integer>
+    <key>StandardOutPath</key>
+    <string>__INSTALL_DIR__/watchdog.log</string>
+    <key>StandardErrorPath</key>
+    <string>__INSTALL_DIR__/watchdog.log</string>
+</dict>
+</plist>

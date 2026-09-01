@@ -18,6 +18,20 @@ else
   git clone --depth 1 -b "$AVENTPROXY_REF" https://github.com/thekoma/aventproxy.git "$VENDOR"
 fi
 
+echo "==> Applying local patches to upstream"
+# Security: default the bridge's RTSP server to loopback (upstream binds all
+# interfaces, exposing the plaintext stream to the whole LAN). Idempotent.
+for p in "$ROOT"/patches/*.patch; do
+  [ -e "$p" ] || continue
+  if git -C "$VENDOR" apply --reverse --check "$p" >/dev/null 2>&1; then
+    echo "    already applied: $(basename "$p")"
+  elif git -C "$VENDOR" apply --check "$p" >/dev/null 2>&1; then
+    git -C "$VENDOR" apply "$p" && echo "    applied: $(basename "$p")"
+  else
+    echo "    WARNING: could not apply $(basename "$p") (upstream may have changed)"
+  fi
+done
+
 echo "==> 2/3 Building the Go WebRTC->RTSP bridge"
 command -v go >/dev/null || { echo "Go is required (brew install go)"; exit 1; }
 mkdir -p "$ROOT/bin"

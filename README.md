@@ -21,8 +21,14 @@ gortsplib abort before `DESCRIBE`. Nobody has decoded that direct stream; the
 only working path is the same WebRTC channel the official app uses, via the
 Tuya cloud — which is exactly what aventproxy does.
 
-> **Security note:** these cameras also tend to leave an X11 port (6000) open.
-> Consider isolating the camera on a guest VLAN.
+> **Security notes:**
+> - The upstream Go bridge binds its RTSP server to **all interfaces** by
+>   default, exposing the plaintext stream to your whole LAN. `setup.sh` applies
+>   a patch (`patches/`) that makes it bind **loopback** instead (override with
+>   `AVENT_RTSP_BIND`). **Do not skip that.**
+> - These cameras also leave port **6000** open — it's Tuya's LAN/RTSP
+>   negotiation (not an X11 server, despite the port number), but it's still
+>   attack surface. Isolating the camera on a guest VLAN is good hygiene.
 
 ## How it works
 
@@ -68,14 +74,26 @@ cd philips-avent-homekit
 ./bin/avent-webrtc-bridge addon --config philips_avent_bridge.json
 #    verify:  ffmpeg -rtsp_transport tcp -i rtsp://127.0.0.1:38554/<Camera> -frames:v 1 -update 1 test.jpg
 
-# 4) (audio) build an ffmpeg with libfdk_aac
-./scripts/build-ffmpeg-fdk.sh
+# 4) (audio) get an ffmpeg with libfdk_aac (HomeKit needs AAC-ELD)
+./scripts/get-ffmpeg.sh            # official static binary — the easy path
+# or ./scripts/build-ffmpeg-fdk.sh # fallback: compile one yourself
 ```
 
 Run the bridge permanently with a template from `templates/`: the macOS
 LaunchAgent (`launchctl bootstrap gui/$(id -u) …`, no sudo) or the Linux
 systemd unit (`systemctl enable --now aventproxy`). Replace `__INSTALL_DIR__`
 (and `__USER__`) first.
+
+### Keep it alive (session watchdog)
+
+The Tuya session expires periodically. `scripts/session-watchdog.py` keeps it
+alive with a keepalive call and posts a **one-time macOS notification** when a
+human re-login is actually needed (or when the camera drops offline) instead of
+you finding a black screen. Store the password once in the Keychain, copy
+`templates/watchdog.env.example` to `watchdog.env`, and load
+`templates/com.example.aventproxy-watchdog.plist` (runs every 6h). Run
+`session-watchdog.py --probe` once to see whether your unit even needs MFA on
+re-login (on the SCD641 it does — so re-login stays a rare human step).
 
 ## Homebridge
 
@@ -95,17 +113,23 @@ systemd unit (`systemctl enable --now aventproxy`). Replace `__INSTALL_DIR__`
   default; HomeKit ignores bridged cameras. Unbridged, it's a separate
   accessory you add manually.
 - **Audio needs AAC-ELD → `libfdk_aac`.** The stock/Homebrew ffmpeg doesn't have
-  it, and `ffmpeg-for-homebridge` ships no macOS-arm64 binary. `brew … --with-fdk-aac`
-  refuses if Xcode.app is older than Homebrew wants — so `build-ffmpeg-fdk.sh`
-  compiles directly with the Command Line Tools. The encoder also needs
-  `-flags +global_header` (AAC-ELD can't go in ADTS).
+  it. The easiest fix is the **prebuilt static binary** from
+  `ffmpeg-for-homebridge` (`scripts/get-ffmpeg.sh`) — it ships macOS arm64/x86_64
+  and Linux builds with `libfdk_aac` + hardware accel, and has no Homebrew
+  dependencies to break on `brew upgrade`. Only if no prebuilt fits you,
+  `build-ffmpeg-fdk.sh` compiles one with the Command Line Tools (needed because
+  `brew … --with-fdk-aac` refuses on an older Xcode.app). Either way the encoder
+  needs `-flags +global_header` (AAC-ELD can't go in ADTS).
 - **Don't use `vcodec: copy`.** The source has occasional corrupt slices and
   irregular keyframes; copy passes them through and the picture freezes until
   the next keyframe. Re-encoding (VideoToolbox `-realtime 1 -bf 0`, short GOP)
   conceals errors, emits regular keyframes, and keeps A/V latency low.
-- **The Tuya session expires (days).** Re-run `avent-login.py` to refresh
-  `philips_avent_bridge.json`, then restart the bridge. Signaling still goes
-  through the Tuya cloud — this is not a fully local solution.
+- **The Tuya session expires (days).** There is **no refresh token**, and a
+  fresh login needs the emailed MFA code every time (the persisted `device_id`
+  is *not* treated as a trusted terminal), so this can't be fully automated.
+  The session watchdog (above) keeps the SID alive and nudges you when a
+  re-login is actually needed; then re-run `avent-login.py` and restart the
+  bridge. Signaling still goes through the Tuya cloud — this is not fully local.
 - **Data center matters.** A Tuya account lives in one region; `avent-login.py`
   probes them if you don't pass `--country`.
 
